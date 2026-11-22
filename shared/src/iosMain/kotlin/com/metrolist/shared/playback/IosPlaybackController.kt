@@ -497,7 +497,7 @@ internal class IosPlaybackController(
                         resolveIosAudioResource(
                             iosPlaybackAudioQuality(Settings.shared.audioQuality),
                             refresh = true,
-                            forceAac = audioRecovery.forceAac(song.id),
+                            forceAac = !supportsIosOpusMp4Playback() || audioRecovery.forceAac(song.id),
                         ) { quality, _, allowHls ->
                             resolver.resolveRemote(
                                 song.id,
@@ -2005,7 +2005,9 @@ internal class IosPlaybackController(
         val excludedProfiles = audioRecovery.excludedProfiles(song.id)
         if (!skipCachedAudio && !refresh && excludedProfiles.isEmpty()) {
             try {
-                audioStorage?.getCachedPlaybackResource(song)?.let { return it }
+                audioStorage?.getCachedPlaybackResource(song)?.let { cached ->
+                    if (supportsIosOpusMp4Playback() || !cached.isOpusAudio()) return cached
+                }
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
@@ -2017,7 +2019,7 @@ internal class IosPlaybackController(
         return resolveIosAudioResource(
             quality,
             refresh = refresh,
-            forceAac = audioRecovery.forceAac(song.id),
+            forceAac = !supportsIosOpusMp4Playback() || audioRecovery.forceAac(song.id),
         ) { requestedQuality, isRefresh, allowHls ->
             val hints =
                 song.toContentHints(wantVideo = false).withIosAudioCapabilities(allowHls)

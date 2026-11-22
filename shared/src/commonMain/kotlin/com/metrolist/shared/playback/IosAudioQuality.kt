@@ -12,6 +12,9 @@ internal fun PlaybackResource.isWebmOpus(): Boolean =
     (isDirectFile || isSabr) && mimeType?.substringBefore(';')?.equals("audio/webm", ignoreCase = true) == true &&
         codecs?.trim()?.equals("opus", ignoreCase = true) == true
 
+internal fun PlaybackResource.isOpusAudio(): Boolean =
+    codecs?.split(',')?.any { it.trim().trim('"').equals("opus", ignoreCase = true) } == true
+
 internal fun iosPlaybackAudioQuality(setting: String): AudioQuality =
     runCatching { AudioQuality.valueOf(setting) }.getOrDefault(AudioQuality.AUTO)
 
